@@ -1,0 +1,79 @@
+{
+  "renderer": {
+    "defaultSymbol": {
+      "color": [
+        128,
+        128,
+        128,
+        255
+      ],
+      "outline": {
+        "color": [
+          0,
+          0,
+          0,
+          255
+        ],
+        "style": "esriSLSSolid",
+        "type": "esriSLS",
+        "width": 0.75
+      },
+      "style": "esriSFSSolid",
+      "type": "esriSFS"
+    },
+    "fieldDelimiter": ",",
+    "type": "uniqueValue"
+  },
+  "map": {
+    "MinScale": 0.0,
+    "MinScaleText": "0"
+  },
+  "label": {
+    "labelExpressionInfo": {
+      "expression": ""
+    },
+    "maxScale": 0,
+    "minScale": 0,
+    "symbol": {
+      "angle": 0,
+      "backgroundColor": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "borderLineColor": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "borderLineSize": 0,
+      "color": [
+        0,
+        0,
+        0,
+        255
+      ],
+      "font": {
+        "decoration": "none",
+        "size": 15,
+        "style": "normal",
+        "weight": "normal"
+      },
+      "haloColor": [
+        255,
+        248,
+        220,
+        255
+      ],
+      "haloSize": 3.0,
+      "horizontalAlignment": "center",
+      "kerning": false,
+      "type": "esriTS",
+      "verticalAlignment": "middle",
+      "xoffset": 0,
+      "yoffset": 0
+    }
+  }
+}
