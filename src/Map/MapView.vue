@@ -20,24 +20,32 @@ export default {
       map = L.map("map", {
         zoomSnap: 0,
         zoomDelta: 0.5
-      }).setView([30.257, 119.727], 16);
+      }).setView([28, 119.5], 12);
+      // }).setView([30.257, 119.727], 16);
       L.tileLayer("https://mt1.google.cn/vt/lyrs=s&x={x}&y={y}&z={z}", {
         maxZoom: 18,
         tileSize: 256
       }).addTo(map);
+      const response = await fetch("map/files.json");
+      const files = await response.json();
 
-      importMbTiles(map);
-      const response = await fetch("map/files.txt");
-      const data = await response.text();
-      for (const name of data.split(["\n"])) {
-        if (name == "") break;
-        // eslint-disable-next-line no-unused-vars
-        let geoJson = await this.getGeoJson(name);
-        console.log(geoJson);
-      }
+      this.importMbTiles(files.mbtileses);
+      this.importGeoJsons(files.geoJsons);
     });
   },
   methods: {
+    async importGeoJsons(names) {
+      this.geoJsons.forEach(layer => {
+        map.removeLayer(layer.obj);
+      });
+      this.geoJsons.splice(0);
+
+      for (const name of names) {
+        if (name == "") break;
+        // eslint-disable-next-line no-unused-vars
+        let geoJson = await this.getGeoJson(name);
+      }
+    },
     async getGeoJson(name) {
       let path = "map/geojson/" + name + ".geojson";
       let response = await fetch(path);
@@ -75,54 +83,52 @@ export default {
         let property = feature.properties[renderer.field1];
         for (const item of renderer.uniqueValueInfos) {
           if (item.value === property) {
-            return this.getSymbol(item.symbol);
+            let symbol=this.getSymbol(item.symbol);
+            
+            return symbol
           }
         }
+        
       }
-      return this.getSymbol(renderer.defaultSymbol);
+      return renderer.defaultSymbol?this.getSymbol(renderer.defaultSymbol):null;
     },
     getSymbol(json) {
       let color = this.getColor(json.color);
       let outlineColor = this.getColor(json.outline.color);
       let outlineWidth = json.outline.width;
       return {
-        color: outlineColor,
-        fillColor: color,
-        weight: outlineWidth
+        color: outlineColor.color,
+        fillColor: color.color,
+        weight: outlineWidth*2,
+        fillOpacity:color.opacity
       };
     },
     getColor(rgba) {
       let r = rgba[0];
       let g = rgba[1];
       let b = rgba[2];
-      // let a = rgba[3];
+       let a = rgba[3];
       let d2h = this.decimalToHex;
-      return "#" + d2h(r) + d2h(g) + d2h(b);
+      return {color:"#" + d2h(r) + d2h(g) + d2h(b),opacity:a/255.0};
     },
     decimalToHex(d, padding = 2) {
       var hex = Number(d).toString(16);
-      padding =
-        typeof padding === "undefined" || padding === null
-          ? (padding = 2)
-          : padding;
 
       while (hex.length < padding) {
         hex = "0" + hex;
       }
 
       return hex;
+    },
+    importMbTiles(names) {
+      for (const name of names) {
+        let path = "map/mbtiles/" + name + ".mbtiles";
+        let mb = L.tileLayer.mbTiles(path, {}).addTo(map);
+        mb.on("databaseerror", function(ev) {
+          console.info("MBTiles DB 错误：" + path, ev);
+        });
+      }
     }
   }
 };
-
-function importMbTiles(map) {
-  let mb = L.tileLayer.mbTiles("map/google2tiles2.mbtiles", {}).addTo(map);
-  map.removeLayer(mb);
-  mb.on("databaseloaded", function(ev) {
-    console.info("MBTiles DB 已加载", ev);
-  });
-  mb.on("databaseerror", function(ev) {
-    console.info("MBTiles DB 错误", ev);
-  });
-}
 </script>
