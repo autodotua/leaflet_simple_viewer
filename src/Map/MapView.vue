@@ -40,17 +40,15 @@ export default {
   methods: {
     async getGeoJson(name) {
       let path = "map/geojson/" + name + ".geojson";
-      const response = await fetch(path);
+      let response = await fetch(path);
       const data = await response.json();
+
+      path = "map/style/" + name + ".style.json";
+      response = await fetch(path);
+      const styleJson = await response.json();
+
       let layer = L.geoJSON(data, {
-        style: function(feature) {
-          switch (feature.properties.POPNAME) {
-            case "浙江":
-              return { color: "#ff0000" };
-            default:
-              return { color: "#0000ff" };
-          }
-        },
+        style: feature => this.getStyle(styleJson, feature),
         onEachFeature: (feature, layer) => {
           layer.on("click", () => {
             this.$emit("feature-clicked", feature);
@@ -59,23 +57,67 @@ export default {
       });
       layer.addTo(map);
       let setVisiable = value => {
-        if(value===false){
-            map.removeLayer(layer);
-        }
-        else{
-            layer.addTo(map)
+        if (value === false) {
+          map.removeLayer(layer);
+        } else {
+          layer.addTo(map);
         }
       };
       let geoJson = { obj: layer, visible: true, name, setVisiable };
       this.geoJsons.push(geoJson);
 
       return geoJson;
+    },
+    // eslint-disable-next-line no-unused-vars
+    getStyle(styleJson, feature) {
+      let renderer = styleJson.renderer;
+      if (renderer.field1) {
+        let property = feature.properties[renderer.field1];
+        for (const item of renderer.uniqueValueInfos) {
+          if (item.value === property) {
+            return this.getSymbol(item.symbol);
+          }
+        }
+      }
+      return this.getSymbol(renderer.defaultSymbol);
+    },
+    getSymbol(json) {
+      let color = this.getColor(json.color);
+      let outlineColor = this.getColor(json.outline.color);
+      let outlineWidth = json.outline.width;
+      return {
+        color: outlineColor,
+        fillColor: color,
+        weight: outlineWidth
+      };
+    },
+    getColor(rgba) {
+      let r = rgba[0];
+      let g = rgba[1];
+      let b = rgba[2];
+      // let a = rgba[3];
+      let d2h = this.decimalToHex;
+      return "#" + d2h(r) + d2h(g) + d2h(b);
+    },
+    decimalToHex(d, padding = 2) {
+      var hex = Number(d).toString(16);
+      padding =
+        typeof padding === "undefined" || padding === null
+          ? (padding = 2)
+          : padding;
+
+      while (hex.length < padding) {
+        hex = "0" + hex;
+      }
+
+      return hex;
     }
   }
 };
 
 function importMbTiles(map) {
   let mb = L.tileLayer.mbTiles("map/google2tiles2.mbtiles", {}).addTo(map);
+  map.removeLayer(mb);
   mb.on("databaseloaded", function(ev) {
     console.info("MBTiles DB 已加载", ev);
   });
