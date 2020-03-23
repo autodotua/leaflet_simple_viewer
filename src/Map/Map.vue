@@ -2,7 +2,7 @@
 
 <template>
   <div style="width:100%;height:100%">
-    <MapView @feature-clicked="featureClicked" :geoJsons="geoJsons"></MapView>
+    <MapView ref="mapRef" @feature-clicked="featureClicked" :geoJsons="geoJsons"></MapView>
     <el-drawer title="属性表" :visible.sync="drawer" direction="ltr" :size="drawerSize">
       <el-table :data="properties" stripe :style="{width:drawerSize}">
         <el-table-column prop="key" label="属性名" width="100"></el-table-column>
@@ -11,11 +11,11 @@
     </el-drawer>
 
     <el-popover class="layer-popup" placement="left" title="标题" width="200" trigger="click">
-      <div>
-        <li class="layer-li" v-for="layer in geoJsons" :key="layer.obj.id">
+      <draggable @change="layerMoved" :list="geoJsons">
+        <div class="layer-li" v-for="layer in geoJsons" :key="layer.obj.id">
           <el-checkbox v-model="layer.visible" @change="layer.setVisiable($event)"> {{layer.name}}</el-checkbox>
-        </li>
-      </div>
+        </div>
+      </draggable>
 
       <el-button class="icon-btn" slot="reference">
         <img src="icon/layer.svg" />
@@ -26,9 +26,10 @@
 
 <script>
 import MapView from "./MapView";
+import draggable from 'vuedraggable'
 export default {
   name: "Map",
-  components: { MapView },
+  components: { MapView ,draggable},
   data() {
     return {
       drawer: false,
@@ -49,6 +50,12 @@ export default {
         this.properties.push({ key, value });
       }
       this.drawer = true;
+    },
+    layerMoved(e){
+      console.log(e);
+      console.log(this.geoJsons);
+      console.log(this.$refs.mapRef);
+      
     }
   }
 };
