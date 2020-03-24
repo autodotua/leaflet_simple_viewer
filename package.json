@@ -13,6 +13,7 @@
   },
   "main": "background.js",
   "dependencies": {
+    "@ngageoint/geopackage": "^2.1.4",
     "core-js": "^3.6.4",
     "element-ui": "^2.13.0",
     "leaflet": "^1.6.0",

@@ -2,7 +2,7 @@
 
 <template>
   <div style="width:100%;height:100%">
-    <MapView ref="mapRef" @feature-clicked="featureClicked" :geoJsons="geoJsons"></MapView>
+    <MapView ref="mapRef" @feature-clicked="featureClicked" :geoJsons="geoJsons" :mbtiles="mbtiles"></MapView>
     <el-drawer title="属性表" :visible.sync="drawer" direction="ltr" :size="drawerSize">
       <el-table :data="properties" stripe :style="{width:drawerSize}">
         <el-table-column prop="key" label="属性名" width="100"></el-table-column>
@@ -12,10 +12,11 @@
 
     <el-popover class="layer-popup" placement="left" title="图层" width="200" trigger="click">
     
-        <a>底图</a>   <div class="layer-li" >
-          <el-checkbox > geopackage图层</el-checkbox>
-          <el-checkbox >mbtiles图层</el-checkbox>
+        <draggable @change="layerMoved" :list="geoJsons">
+        <div class="layer-li" v-for="layer in mbtiles" :key="layer.obj.id">
+          <el-checkbox v-model="layer.visible" @change="layer.setVisiable($event)"> {{layer.name}}</el-checkbox>
         </div>
+      </draggable>
         <br>
         <a>矢量图</a>
       <draggable @change="layerMoved" :list="geoJsons">
@@ -42,7 +43,8 @@ export default {
       drawer: false,
       drawerSize: "360px",
       properties: [],
-      geoJsons: []
+      geoJsons: [],
+      mbtiles:[]
     };
   },
   computed: {},

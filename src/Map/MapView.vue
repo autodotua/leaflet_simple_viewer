@@ -5,6 +5,7 @@
 <script>
 /* eslint-disable no-undef */
 import "leaflet/dist/leaflet.css";
+//import './leaflet-geopackage'
 let map;
 //import L from 'vue2-leaflet'
 export default {
@@ -13,7 +14,7 @@ export default {
   data() {
     return { currentFeature: "" };
   },
-  props: ["feature-clicked", "geoJsons"],
+  props: ["feature-clicked", "geoJsons", "mbtiles"],
   computed: {},
   mounted: function() {
     this.$nextTick(async function() {
@@ -54,6 +55,7 @@ export default {
       path = "map/style/" + name + ".style.json";
       response = await fetch(path);
       const styleJson = await response.json();
+console.log( name);
 
       let layer = L.geoJSON(data, {
         style: feature => this.getStyle(styleJson, feature),
@@ -83,14 +85,15 @@ export default {
         let property = feature.properties[renderer.field1];
         for (const item of renderer.uniqueValueInfos) {
           if (item.value === property) {
-            let symbol=this.getSymbol(item.symbol);
-            
-            return symbol
+            let symbol = this.getSymbol(item.symbol);
+
+            return symbol;
           }
         }
-        
       }
-      return renderer.defaultSymbol?this.getSymbol(renderer.defaultSymbol):null;
+      return renderer.defaultSymbol
+        ? this.getSymbol(renderer.defaultSymbol)
+        : null;
     },
     getSymbol(json) {
       let color = this.getColor(json.color);
@@ -99,17 +102,17 @@ export default {
       return {
         color: outlineColor.color,
         fillColor: color.color,
-        weight: outlineWidth*2,
-        fillOpacity:color.opacity
+        weight: outlineWidth * 2,
+        fillOpacity: color.opacity
       };
     },
     getColor(rgba) {
       let r = rgba[0];
       let g = rgba[1];
       let b = rgba[2];
-       let a = rgba[3];
+      let a = rgba[3];
       let d2h = this.decimalToHex;
-      return {color:"#" + d2h(r) + d2h(g) + d2h(b),opacity:a/255.0};
+      return { color: "#" + d2h(r) + d2h(g) + d2h(b), opacity: a / 256.0 };
     },
     decimalToHex(d, padding = 2) {
       var hex = Number(d).toString(16);
@@ -125,6 +128,10 @@ export default {
         let path = "map/mbtiles/" + name + ".mbtiles";
         let mb = L.tileLayer.mbTiles(path, {}).addTo(map);
         mb.on("databaseerror", function(ev) {
+          let setVisible=()=>{
+
+          };
+          this.mbtiles.push({name,obj:mb,setVisible});
           console.info("MBTiles DB 错误：" + path, ev);
         });
       }
