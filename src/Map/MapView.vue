@@ -6,19 +6,19 @@
 /* eslint-disable no-undef */
 import "leaflet/dist/leaflet.css";
 //import './leaflet-geopackage'
-let map;
+// let map;
 //import L from 'vue2-leaflet'
 export default {
   name: "MapView",
   components: {},
   data() {
-    return { currentFeature: "", sheet: {} };
+    return { currentFeature: "", sheet: {}, map: null, location: null };
   },
   props: ["feature-clicked", "geoJsons", "mbtiles"],
   computed: {},
   mounted: function() {
     this.$nextTick(async function() {
-      map = L.map("map", {
+      this.map = L.map("map", {
         zoomSnap: 0,
         zoomDelta: 0.5
       }).setView([28, 119.53], 12);
@@ -26,7 +26,7 @@ export default {
       L.tileLayer("https://mt1.google.cn/vt/lyrs=s&x={x}&y={y}&z={z}", {
         maxZoom: 18,
         tileSize: 256
-      }).addTo(map);
+      }).addTo(this.map);
       const response = await fetch("map/files.json");
       const files = await response.json();
 
@@ -37,7 +37,7 @@ export default {
   methods: {
     async importGeoJsons(names) {
       this.geoJsons.forEach(layer => {
-        map.removeLayer(layer.obj);
+        this.map.removeLayer(layer.obj);
       });
       this.geoJsons.splice(0);
 
@@ -66,12 +66,12 @@ export default {
           });
         }
       });
-      layer.addTo(map);
+      layer.addTo(this.map);
       let setVisiable = value => {
         if (value === false) {
-          map.removeLayer(layer);
+          this.map.removeLayer(layer);
         } else {
-          layer.addTo(map);
+          layer.addTo(this.map);
         }
       };
 
@@ -180,13 +180,36 @@ export default {
     importMbTiles(names) {
       for (const name of names) {
         let path = "map/mbtiles/" + name + ".mbtiles";
-        let mb = L.tileLayer.mbTiles(path, {}).addTo(map);
+        let mb = L.tileLayer.mbTiles(path, {}).addTo(this.map);
         mb.on("databaseerror", function(ev) {
           let setVisible = () => {};
           this.mbtiles.push({ name, obj: mb, setVisible });
           console.info("MBTiles DB 错误：" + path, ev);
         });
       }
+    },
+    locate() {
+      this.map.locate({
+        setView: true,
+        maxZoom: 16
+      });
+      this.map.on("locationfound", e => {
+        var radius = e.accuracy / 2;
+        // L.marker(e.latlng)
+        //   .addTo(this.map)
+        //   .bindPopup("当前位置");
+        if (this.location) {
+          this.map.removeLayer(this.loacation);
+        }
+        this.loacation = L.circle(e.latlng, radius).addTo(this.map);
+      });
+
+      this.map.on("locationerror", function(e) {
+        this.$notify({
+          title: "定位",
+          message: "定位失败：" + e
+        });
+      });
     }
   }
 };
