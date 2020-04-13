@@ -21,15 +21,15 @@ export default {
   data() {
     return { currentFeature: "", sheet: {}, map: null, location: null };
   },
-  props: ["feature-clicked", "geoJsons", "mbtiles", "slices"],
+  props: ["feature-clicked", "geoJsons", "mbtiles"],
   computed: {},
   mounted: function() {
     this.$nextTick(async function() {
       this.map = L.map("map", {
         zoomSnap: 0,
         zoomDelta: 0.5
-        // }).setView([30.8, 120], 12);
-      }).setView([28, 119.53], 12);
+      }).setView([30.8, 120], 12);
+      // }).setView([28, 119.53], 12);
       // }).setView([30.257, 119.727], 16);
       L.tileLayer("https://mt1.google.cn/vt/lyrs=s&x={x}&y={y}&z={z}", {
         maxZoom: 18,
@@ -40,8 +40,6 @@ export default {
       // new L.Shapefile("map/小班2.shp").addTo(this.map);
       this.importMbTiles(files.mbtileses);
       this.importGeoJsons(files.geoJsons);
-      this.importGeoJsons(files.geoJsons);
-      this.importSlices(files.slices);
 
       // this.importPDFs([]);
     });
@@ -67,51 +65,55 @@ export default {
       for (const name of names) {
         if (name == "") break;
         let geoJson = await this.getGeoJson(name);
-        this.geoJsons.push(geoJson);
       }
     },
-    async importSlices(slices) {
-      if (this.slices) {
-        this.slices.forEach(layer => {
-          this.map.removeLayer(layer.obj);
-        });
-        this.slices.splice(0);
-      }
-      console.log(slices);
-      let slice = slices[0];
-      let geoJson = this.getGeoJson(slice.LayerName, slices, 0);
-      this.slices.push(geoJson);
-    },
-    async getGeoJson(name, slices = null, sliceIndex = 0) {
+    async getGeoJson(name, subLayer = false) {
       let path = "map/geojson/" + name + ".geojson";
-      console.log("开始加载地图：" + path);
-
+      console.log("加载地图："+path);
+      
       let response = await fetch(path);
       const data = await response.json();
-      path = "map/style/" + name + ".style.json";
+      path = "map/style/" + name.split('_')[0] + ".style.json";
       response = await fetch(path);
       const styleJson = await response.json();
-      console.log("结束加载地图：" + path);
+
+      // var vectorGrid = L.vectorGrid
+      //   .slicer(data, {
+      //     rendererFactory: L.svg.tile,
+      //     maxZoom:18,
+      //     vectorTileLayerStyles: {
+      //       sliced: (properties, zoom) => {
+      //         console.log(zoom);
+
+      //         let style = this.getStyle(styleJson, properties);
+      //         console.log(style);
+
+      //         return style;
+      //       }
+      //     },
+      //     interactive: true,
+      //     // getFeatureId: function(f) {
+      //     //   return f.properties.wb_a3;
+      //     // }
+      //   })
+      //   .addTo(this.map);
 
       let layer = L.geoJSON(data, {
         style: feature => this.getStyle(styleJson, feature),
         onEachFeature: (feature, layer) => {
+          console.log("OK");
+          
           try {
-            this.bindLabel(styleJson, layer, feature, name);
+             this.bindLabel(styleJson, layer, feature, name);
           } catch (error) {
             console.log(error);
+            
           }
-
-          layer.on("click",async () => {
-            if (slices && slices.length > sliceIndex+1) {
-              let value = feature.properties[slices[sliceIndex].LowField];
-              // let value = Object.values(feature.properties)[0];
-             let geoJson=await this.getGeoJson(
-                slices[sliceIndex + 1].LayerName + "_" + value,
-                slices,
-                sliceIndex + 1
-              );
-              this.slices.push(geoJson);
+         
+          layer.on("click", () => {
+            if (Object.values(feature.properties).length == 1) {
+              let value = Object.values(feature.properties)[0];
+              this.getGeoJson(name + "_" + value);
               return;
             }
             this.$emit("feature-clicked", feature);
@@ -128,7 +130,7 @@ export default {
       };
 
       let geoJson = { obj: layer, visible: true, name, setVisiable };
-      //this.geoJsons.push(geoJson);
+      this.geoJsons.push(geoJson);
 
       return geoJson;
     },
@@ -188,15 +190,11 @@ export default {
     getStyle(styleJson, feature) {
       let renderer = styleJson.renderer;
       if (renderer.field1) {
-        let property = feature.properties[renderer.field1];
+        let property = feature[renderer.field1];
         for (const item of renderer.uniqueValueInfos) {
-          console.log(item);
-          console.log(feature);
-          
           if (item.value === property) {
             let symbol = this.getSymbol(item.symbol);
-            console.log("symbol is:");
-            console.log(symbol);
+console.log(symbol);
 
             return symbol;
           }

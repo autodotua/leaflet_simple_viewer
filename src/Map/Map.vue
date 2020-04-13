@@ -2,7 +2,11 @@
 
 <template>
   <div style="width:100%;height:100%">
-    <MapView ref="mapRef" @feature-clicked="featureClicked" :geoJsons="geoJsons" :mbtiles="mbtiles"></MapView>
+    <MapView ref="mapRef" 
+    @feature-clicked="featureClicked" 
+    :geoJsons="geoJsons" 
+    :slices="slices"
+    :mbtiles="mbtiles"></MapView>
     <el-drawer title="属性表" :visible.sync="drawer" direction="ltr" :size="drawerSize">
       <el-table :data="properties" stripe :style="{width:drawerSize}">
         <el-table-column prop="key" label="属性名" width="100"></el-table-column>
@@ -19,7 +23,12 @@
         <br />
         <a>矢量图</a>
         <draggable @change="layerMoved" :list="geoJsons">
-          <div class="layer-li" v-for="layer in geoJsons" :key="layer.obj.id">
+          <div class="layer-li" v-for="layer in geoJsons" :key="layer.name">
+            <el-checkbox v-model="layer.visible" @change="layer.setVisiable($event)">{{layer.name}}</el-checkbox>
+          </div>
+        </draggable>
+        <draggable @change="layerMoved" :list="slices">
+          <div class="layer-li" v-for="layer in slices" :key="layer.name">
             <el-checkbox v-model="layer.visible" @change="layer.setVisiable($event)">{{layer.name}}</el-checkbox>
           </div>
         </draggable>
@@ -49,7 +58,8 @@ export default {
       drawerSize: "360px",
       properties: [],
       geoJsons: [],
-      mbtiles: []
+      mbtiles: [],
+      slices:[]
     };
   },
   computed: {},
