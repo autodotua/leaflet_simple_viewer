@@ -44,6 +44,32 @@ export default {
       this.importSlices(files.slices);
 
       // this.importPDFs([]);
+
+      this.map.on("moveend", () => {
+        if (this.map.getZoom() > 13) {
+          let latLng = this.map.getCenter();
+          let x = latLng.lng;
+          let y = latLng.lat;
+          let ok = false;
+          Object.keys(files.sliceExtends).forEach(async key => {
+            if (ok) {
+              return;
+            }
+            
+            if(this.slices.some(p=>p.name==key)){
+              return;
+            }
+            let env = files.sliceExtends[key];
+            if (env.XMin < x && env.XMax > x && env.YMin < y && env.YMax > y) {
+            let geoJson=await  this.getGeoJson(key);   
+            console.log(this.slices); 
+            this.slices.push(geoJson);
+              ok = true;
+              return;
+            }
+          });
+        }
+      });
     });
   },
   methods: {
@@ -77,7 +103,7 @@ export default {
         });
         this.slices.splice(0);
       }
-      console.log(slices);
+      // console.log(slices);
       let slice = slices[0];
       let geoJson = this.getGeoJson(slice.LayerName, slices, 0);
       this.slices.push(geoJson);
@@ -102,11 +128,11 @@ export default {
             console.log(error);
           }
 
-          layer.on("click",async () => {
-            if (slices && slices.length > sliceIndex+1) {
+          layer.on("click", async () => {
+            if (slices && slices.length > sliceIndex + 1) {
               let value = feature.properties[slices[sliceIndex].LowField];
               // let value = Object.values(feature.properties)[0];
-             let geoJson=await this.getGeoJson(
+              let geoJson = await this.getGeoJson(
                 slices[sliceIndex + 1].LayerName + "_" + value,
                 slices,
                 sliceIndex + 1
@@ -190,13 +216,13 @@ export default {
       if (renderer.field1) {
         let property = feature.properties[renderer.field1];
         for (const item of renderer.uniqueValueInfos) {
-          console.log(item);
-          console.log(feature);
-          
+          // console.log(item);
+          // console.log(feature);
+
           if (item.value === property) {
             let symbol = this.getSymbol(item.symbol);
-            console.log("symbol is:");
-            console.log(symbol);
+            // console.log("symbol is:");
+            // console.log(symbol);
 
             return symbol;
           }
