@@ -68,6 +68,8 @@ export default {
   },
   methods: {
     featureClicked(e) {
+      console.log("clicked");
+      
       this.properties = [];
       for (const key in e.properties) {
         const value = e.properties[key];

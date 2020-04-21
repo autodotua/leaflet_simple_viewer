@@ -14,8 +14,10 @@
   "main": "background.js",
   "dependencies": {
     "@ngageoint/geopackage": "^2.1.4",
+    "@types/jsts": "^0.17.3",
     "core-js": "^3.6.4",
     "element-ui": "^2.13.0",
+    "jsts": "^2.1.2",
     "leaflet": "^1.6.0",
     "leaflet.chinatmsproviders": "^3.0.0",
     "pdfjs-dist": "^2.3.200",
