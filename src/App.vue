@@ -37,8 +37,8 @@ const router = new VueRouter({
 });
 
 export default {
-  name: "App",
-  router,
+    name: "App",
+    router,
   components: {},
   data: () => {
     return {
